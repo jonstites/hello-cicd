@@ -14,6 +14,9 @@ matrix:
     - os: osx
       env: TARGET=x86_64-apple-darwin
 
+install:
+  - rustup target add $TARGET
+      
 before_deploy:
   - cargo build --release --target $TARGET
   - cp target/${TARGET}/release/hello-cicd hello-cicd-${TRAVIS_TAG}-${TARGET}
