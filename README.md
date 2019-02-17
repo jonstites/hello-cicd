@@ -41,7 +41,7 @@ git push tag "v0.1.0"
 You can see that it ran [successfully](https://travis-ci.com/jonstites/hello-cicd/jobs/178401495/config) but that the
 [release](https://github.com/jonstites/hello-cicd/releases/tag/v0.1.0) has no binaries.
 
-Let's fix that. We'll get an [OAuth token](https://docs.travis-ci.com/user/deployment/releases/#authenticating-with-an-oauth-token) and try again with v0.1.1:
+Let's fix that. We'll get an [OAuth token](https://docs.travis-ci.com/user/deployment/releases/#authenticating-with-an-oauth-token) and try again with v0.1.1. We'll use the `before_deploy` and `deploy` steps:
 
 ```yaml
 language: rust
@@ -80,8 +80,11 @@ notifications:
 Build [passes](https://travis-ci.com/jonstites/hello-cicd/jobs/178401495/config) but still
 [no binaries](https://github.com/jonstites/hello-cicd/releases/tag/v0.1.1)! What gives?
 
-The reason is that we actually need to trigger builds on our tags.
-Assuming we're using [SemVer](https://semver.org/) for our tags, this can be done with a regex for our v0.1.2:
+The reason is that we need to trigger builds on our tags. We have told Travis CI that we only
+want a build to be triggered against the master branch. Tags, even based off the master branch,
+won't trigger a new build.
+
+For v0.1.2, assuming we're using [SemVer](https://semver.org/) for our tags, we can just use a regex to match our tags:
 
 ```yaml
 language: rust
@@ -126,7 +129,7 @@ a binary is [uploaded](https://github.com/jonstites/hello-cicd/releases/tag/v0.1
 But just one binary. And it's built for whatever Travis CI is giving us by default
 (currently Ubuntu Trusty 14.04).
 
-Let's add Linux and macOS for v0.1.3:
+Let's add 32-bit and 64-bit Linux binaries, and also macOS for v0.1.3 of `hello-cicd`:
 
 ```yaml
 rust: stable
@@ -177,6 +180,73 @@ notifications:
     on_success: never
 ```
 
+Build [passes](https://travis-ci.com/jonstites/hello-cicd/builds/101238539) and
+binaries get [deployed](https://github.com/jonstites/hello-cicd/releases/tag/v0.1.3).
+
+Finally, let's add Windows support, too. Be warned that because of an interaction between
+rust-docs and antivirus software, Windows Rust builds are super slow on Travis CI (like 10 minutes).
+
+```yaml
+rust: stable
+language: rust
+
+script:
+  - cargo build 
+  - cargo test 
+
+matrix:
+  include:
+    - os: linux
+      env: TARGET=i686-unknown-linux-musl
+    - os: linux
+      env: TARGET=x86_64-unknown-linux-musl
+    - os: osx
+      env: TARGET=x86_64-apple-darwin
+    - os: windows
+      env: TARGET=x86_64-pc-windows-msvc
+    - os: windows
+      env: TARGET=i686-pc-windows-msvc
+
+install:
+  - rustup target add $TARGET
+      
+before_deploy:
+  - |
+    (
+    if [ "$TRAVIS_OS_NAME" = 'windows' ]; then
+      RUST_FLAGS="-Ctarget-feature=+crt-static" cargo build --release --target $TARGET
+      cp target/${TARGET}/release/hello-cicd.exe hello-cicd-${TRAVIS_TAG}-${TARGET}.exe
+    else
+      cargo build --release --target $TARGET
+      cp target/${TARGET}/release/hello-cicd hello-cicd-${TRAVIS_TAG}-${TARGET}
+    fi
+    )
+    
+deploy:
+  api_key:
+    secure: "tBj3FAbnxcpp9J3fw4JndVU0o4CrWa3MLI6LOxOjyYMWAiG7BhEKVerFB2JLWoFruSMb9z3D4Ee9ZCQTuFTKWdEiQCYfpBD6+EU12ZIkNH5w++rG1he3eogBOew3a2+NoMr38AOK+OGTxxjEARiUmD/nmIuXHZCmxwcAjK0T/iVCtQRDYV9Fj9Nc23ou7eTxJhVvpDzdKglgfpHHPv9vAzL15XTsz//4kQ9VALKm4N2UUAO5ONOxQUvoziMDAhH5dOsPxeBe8lv4zYGGvKI0ksW0Eah9YK/oYVEX7/yfWrbfGWukvrEmsAY9WNLlR5ZHaSaneeCqIX191aLSijykd5uPINuDaoar8ZpORgGEsJ9GTByrO6hmOif9rBG2pwBbpw4QbIYoNY26I3Su2qtoRFkXTOnajhU2Uc2YMdGk1lfOLlt8MnClEEIGPjfg4bAQJnnD2bstp+ZSMv2Ls1s5MlZezJsBzTtn3Kdzi8AeMyCEX9GtnjEb46ehCYFx+DU8Y2SOfpTHahvkSLGdzOCIszyqFRVyEW5BBhI4I1xa83rEOARjJ4B423TvO68+0mp+F/loD9ReN66mWjh+7gu07YHrGcBiP36eAz3zF8lYQymCZiiUIc+6dM+ceq1vaEeJI3MqQPEHPIBBueuoEJi1IPRYQzeAiR3JjNgbYCVTbS8="
+
+  file: hello-cicd-${TRAVIS_TAG}-${TARGET}*
+  file_glob: true
+
+  on:
+    tags: true
+
+  provider: releases
+  skip_cleanup: true
+  
+branches:
+  only:
+    # Pushes and PR to the master branch
+    - master
+    # Ruby regex to match tags.
+    # Required, or travis won't trigger deploys when a new tag is pushed.
+    - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
+    
+notifications:
+  email:
+    on_success: never
+```
 
 ## License
 
