@@ -11,7 +11,7 @@ Anyway, it turns out that publishing cross-compiled binaries on GitHub for Rust 
 
 ## Building the Travis CI configuration file
 
-Let start with a minimal configuration that only runs our test:
+Let start with a minimal `.travis.yml` that only runs our test:
 
 ```yaml
 language: rust
@@ -34,6 +34,84 @@ notifications:
 You can see that it ran [successfully](https://travis-ci.com/jonstites/hello-cicd/jobs/178401495/config) but that the
 [release](https://github.com/jonstites/hello-cicd/releases/tag/v0.1.0) has no binaries.
 
+Let's fix that. We'll get an [OAuth token](https://docs.travis-ci.com/user/deployment/releases/#authenticating-with-an-oauth-token) and try again:
+
+```yaml
+language: rust
+rust: stable
+
+script:
+  - cargo build 
+  - cargo test 
+
+before_deploy:
+  - cargo build --release
+
+deploy:
+  api_key:
+    # Elided for space
+    secure: "WF..."
+
+  file: target/release/hello-cicd
+
+  on:
+    tags: true
+
+  provider: releases
+  skip_cleanup: true
+  
+branches:
+  only:
+    # Pushes and PR to the master branch
+    - master
+    
+notifications:
+  email:
+    on_success: never
+```
+
+Build [passes](https://travis-ci.com/jonstites/hello-cicd/jobs/178401495/config) but still
+[no binaries](https://github.com/jonstites/hello-cicd/releases/tag/v0.1.1)! What gives?
+
+The reason is that we actually need to trigger builds on our tags.
+Assuming we're using [SemVer](https://semver.org/) for our tags, this can be done with a regex:
+
+```yaml
+language: rust
+rust: stable
+
+script:
+  - cargo build 
+  - cargo test 
+
+before_deploy:
+  - cargo build --release
+
+deploy:
+  api_key:
+    # Elided for space
+    secure: "WF..."
+
+  file: target/release/hello-cicd
+
+  on:
+    tags: true
+
+  provider: releases
+  skip_cleanup: true
+  
+branches:
+  only:
+    # Pushes and PR to the master branch
+    - master
+    # Ruby regex to match tags.
+    # Required, or travis won't trigger deploys when a new tag is pushed.
+    - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
+    
+notifications:
+  email:
+    on_success: never
+```
 
 
 ## License
