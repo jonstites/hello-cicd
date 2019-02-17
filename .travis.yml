@@ -1,66 +1,14 @@
 language: rust
 rust: stable
 
-env:
-  global:
-    - PROJECT_NAME: hello-cicd
-
-matrix:
-  include:
-    - os: linux
-      env: TARGET=i686-unknown-linux-musl
-    - os: linux
-      env: TARGET=x86_64-unknown-linux-musl
-    - os: osx
-      env: TARGET=x86_64-apple-darwin
-    - os: windows
-      env: TARGET=x86_64-pc-windows-msvc
-    - os: windows
-      env: TARGET=i686-pc-windows-msvc
-
-install:
-  - rustup target add $TARGET
-
 script:
-  - cargo build --target $TARGET
-  - cargo test --target $TARGET
-
-before_deploy:
-  - |
-    (
-      cargo build --release --target $TARGET
-      release_name=${PROJECT_NAME}-${TRAVIS_TAG}-${TARGET}
-      release_dir=${release_name}
-      mkdir ${release_dir}
-      if [ "$TRAVIS_OS_NAME" = 'windows' ]; then
-        cp target/${TARGET}/release/hello-cicd.exe ${release_dir}
-        7z a "${release_name}.zip" ${release_dir}        
-      else
-        cp target/${TARGET}/release/hello-cicd ${release_dir}
-        tar -czf "${release_name}.tar.gz" ${release_dir}        
-      fi
-    )
-
-deploy:
-  api_key:
-    secure: "WF+jDIdR8BTc72alLMK84756hP+IYOyd8f51l7zw07sM3DW5JwO7Va8tEQX4Wv0T8LKQVCmi2l3YDuRX7quphJ2PI1APK+MD5YGq6MkgYMSCdQqZjV5BUawBiiZibjrcBYaR/7r3jIiPpE9ZXmAkZWxNGFqDU09euFryIok+aedwyI4GRy8ouXp+mBLei/ErkyDkGIW/+1TOHYWIPyt9N9WkAy0NDBYx/YzLAC66vVfFFR/sD1EIAUpYPb+gwQjseY1n/vV0KyGCuCy+O346IIeCDqBnJz6KCyHVZkD2g6eWDqnFxSN7XT6+Jf0YAKElZra3W4QkYk8pkuk9hY3LabMkl2biTUBlRL8LU1gH0HaPqKFycYMbOZYe0KBfCIT8dykGTbNZrNp3awcY5xZWszfBuIXgJuqALGQlSR7WM3V5ln2s+bDfCI83Ed0RnUtQ9IwfmnenSlinFu6OXG0HypvZPTpyqrq84//9SLco7T3Fc6QFkWoiWkSZjxBlb0dyBpCJeF8+t0z6rX+ZZJf8ottlZsID4taWZegIAhitdJl1KH6DqDIKtJ/yMJy0c+olMxDzURNft9OWdzq1KfKbCqSAcqf5nV09crWlgdg/VIfkKZAXRQcC3ZoZTWTjpi54s9qd9dFiJKLvC1IV7+6yH1Kt4qZzWTWLjI6xm7QyWCc="
-    
-  file: "${PROJECT_NAME}-${TRAVIS_TAG}-${TARGET}.*"
-  file_glob: true
-  
-  on:
-    tags: true
-
-  provider: releases
-  skip_cleanup: true
+  - cargo build 
+  - cargo test 
 
 branches:
   only:
     # Pushes and PR to the master branch
     - master
-    # Ruby regex to match tags.
-    # Required, or travis won't trigger deploys when a new tag is pushed.
-    - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
     
 notifications:
   email:
