@@ -57,7 +57,7 @@ before_deploy:
 deploy:
   api_key:
     # Elided for space
-    secure: "WF..."
+    secure: "tBj..."
 
   file: target/release/hello-cicd
 
@@ -97,9 +97,63 @@ before_deploy:
 deploy:
   api_key:
     # Elided for space
-    secure: "WF..."
+    secure: "tBj..."
 
   file: target/release/hello-cicd
+
+  on:
+    tags: true
+
+  provider: releases
+  skip_cleanup: true
+  
+branches:
+  only:
+    # Pushes and PR to the master branch
+    - master
+    # Ruby regex to match tags.
+    # Required, or travis won't trigger deploys when a new tag is pushed.
+    - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
+    
+notifications:
+  email:
+    on_success: never
+```
+
+Great! Tests [pass](https://travis-ci.com/jonstites/hello-cicd/builds/101237811) and
+a binary is [uploaded](https://github.com/jonstites/hello-cicd/releases/tag/v0.1.2).
+
+But just one binary. And it's built for whatever Travis CI is giving us by default
+(currently Ubuntu Trusty 14.04).
+
+Let's add Linux and macOS for v0.1.3:
+
+```yaml
+rust: stable
+language: rust
+
+script:
+  - cargo build 
+  - cargo test 
+
+matrix:
+  include:
+    - os: linux
+      env: TARGET=i686-unknown-linux-musl
+    - os: linux
+      env: TARGET=x86_64-unknown-linux-musl
+    - os: osx
+      env: TARGET=x86_64-apple-darwin
+
+before_deploy:
+  - cargo build --release --target $TARGET
+  - cp target/${TARGET}/release/hello-cicd hello-cicd-${TRAVIS_TAG}-${TARGET}
+      
+deploy:
+  api_key:
+    secure: "tBj..."
+
+  file: hello-cicd-${TRAVIS_TAG}-${TARGET}
 
   on:
     tags: true
