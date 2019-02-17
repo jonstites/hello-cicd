@@ -183,7 +183,8 @@ notifications:
 Build [passes](https://travis-ci.com/jonstites/hello-cicd/builds/101238539) and
 binaries get [deployed](https://github.com/jonstites/hello-cicd/releases/tag/v0.1.3).
 
-Finally, let's add Windows support, too.
+Finally, let's add Windows support, too. Be warned that because of an interaction between
+rust-docs and antivirus software, Windows Rust builds are super slow on Travis CI (like 10 minutes).
 
 ```yaml
 rust: stable
@@ -218,6 +219,7 @@ before_deploy:
     else
       cargo build --release --target $TARGET
       cp target/${TARGET}/release/hello-cicd hello-cicd-${TRAVIS_TAG}-${TARGET}
+    fi
     )
     
 deploy:

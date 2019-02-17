@@ -30,6 +30,7 @@ before_deploy:
     else
       cargo build --release --target $TARGET
       cp target/${TARGET}/release/hello-cicd hello-cicd-${TRAVIS_TAG}-${TARGET}
+    fi
     )
     
 deploy:
