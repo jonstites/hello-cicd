@@ -31,10 +31,17 @@ notifications:
     on_success: never
 ```
 
+Commit, tag and push (we'll do this every time, incrementing the version as we go):
+```
+git push origin master
+git tag -a "v0.1.0"
+git push tag "v0.1.0"
+```
+
 You can see that it ran [successfully](https://travis-ci.com/jonstites/hello-cicd/jobs/178401495/config) but that the
 [release](https://github.com/jonstites/hello-cicd/releases/tag/v0.1.0) has no binaries.
 
-Let's fix that. We'll get an [OAuth token](https://docs.travis-ci.com/user/deployment/releases/#authenticating-with-an-oauth-token) and try again:
+Let's fix that. We'll get an [OAuth token](https://docs.travis-ci.com/user/deployment/releases/#authenticating-with-an-oauth-token) and try again with v0.1.1:
 
 ```yaml
 language: rust
@@ -74,7 +81,7 @@ Build [passes](https://travis-ci.com/jonstites/hello-cicd/jobs/178401495/config)
 [no binaries](https://github.com/jonstites/hello-cicd/releases/tag/v0.1.1)! What gives?
 
 The reason is that we actually need to trigger builds on our tags.
-Assuming we're using [SemVer](https://semver.org/) for our tags, this can be done with a regex:
+Assuming we're using [SemVer](https://semver.org/) for our tags, this can be done with a regex for our v0.1.2:
 
 ```yaml
 language: rust
