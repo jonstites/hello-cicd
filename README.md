@@ -9,6 +9,31 @@ CI/CD is like flossing: everyone knows they should do it, but it's not very fun.
 
 Anyway, it turns out that publishing cross-compiled binaries on GitHub for Rust projects is easy, but not super-well documented for some reason.
 
+## Building the Travis CI configuration file
+
+Let start with a minimal configuration that only runs our test:
+
+```yaml
+language: rust
+rust: stable
+
+script:
+  - cargo build 
+  - cargo test 
+
+branches:
+  only:
+    # Pushes and PR to the master branch
+    - master
+    
+notifications:
+  email:
+    on_success: never
+```
+
+You can see that it ran [successfully](https://travis-ci.com/jonstites/hello-cicd/jobs/178401495/config) but that the
+[release](https://github.com/jonstites/hello-cicd/releases/tag/v0.1.0) has no binaries.
+
 
 
 ## License
@@ -26,8 +51,3 @@ at your option.
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
 dual licensed as above, without any additional terms or conditions.
-
-
-[1] Cross and Trust
-[2] Most Rust projects use AppVeyor to build Windows binaries.
-[3] Windows is super slow though.
