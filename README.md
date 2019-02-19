@@ -313,6 +313,8 @@ binary. We would probably want to use `tar.gz` for Linux and macOS and `.zip` fo
 
 If we added `cache: cargo` to our `.travis.yml`, it would speed up our builds.
 
+We could use the `strip` command to reduce the size of our binaries.
+
 Finally, we could run tests against beta and nightly Rust, in addition to stable.
 
 Implementing those ideas will be left as an exercise for the reader.
