@@ -213,18 +213,17 @@ install:
 before_deploy:
   - |
     (
+    cargo build --release --target $TARGET    
     if [ "$TRAVIS_OS_NAME" = 'windows' ]; then
-      RUST_FLAGS="-Ctarget-feature=+crt-static" cargo build --release --target $TARGET
       cp target/${TARGET}/release/hello-cicd.exe hello-cicd-${TRAVIS_TAG}-${TARGET}.exe
     else
-      cargo build --release --target $TARGET
       cp target/${TARGET}/release/hello-cicd hello-cicd-${TRAVIS_TAG}-${TARGET}
     fi
     )
     
 deploy:
   api_key:
-    secure: "tBj3FAbnxcpp9J3fw4JndVU0o4CrWa3MLI6LOxOjyYMWAiG7BhEKVerFB2JLWoFruSMb9z3D4Ee9ZCQTuFTKWdEiQCYfpBD6+EU12ZIkNH5w++rG1he3eogBOew3a2+NoMr38AOK+OGTxxjEARiUmD/nmIuXHZCmxwcAjK0T/iVCtQRDYV9Fj9Nc23ou7eTxJhVvpDzdKglgfpHHPv9vAzL15XTsz//4kQ9VALKm4N2UUAO5ONOxQUvoziMDAhH5dOsPxeBe8lv4zYGGvKI0ksW0Eah9YK/oYVEX7/yfWrbfGWukvrEmsAY9WNLlR5ZHaSaneeCqIX191aLSijykd5uPINuDaoar8ZpORgGEsJ9GTByrO6hmOif9rBG2pwBbpw4QbIYoNY26I3Su2qtoRFkXTOnajhU2Uc2YMdGk1lfOLlt8MnClEEIGPjfg4bAQJnnD2bstp+ZSMv2Ls1s5MlZezJsBzTtn3Kdzi8AeMyCEX9GtnjEb46ehCYFx+DU8Y2SOfpTHahvkSLGdzOCIszyqFRVyEW5BBhI4I1xa83rEOARjJ4B423TvO68+0mp+F/loD9ReN66mWjh+7gu07YHrGcBiP36eAz3zF8lYQymCZiiUIc+6dM+ceq1vaEeJI3MqQPEHPIBBueuoEJi1IPRYQzeAiR3JjNgbYCVTbS8="
+    secure: "tB..."
 
   file: hello-cicd-${TRAVIS_TAG}-${TARGET}*
   file_glob: true
@@ -247,6 +246,8 @@ notifications:
   email:
     on_success: never
 ```
+
+
 
 ## License
 
